@@ -10,6 +10,7 @@ COPY . .
 # 确保 templates 目录存在
 RUN mkdir -p /app/templates
 
-EXPOSE 7860
+EXPOSE 8080
+
 
 CMD ["python", "main.py"]
