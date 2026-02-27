@@ -9,7 +9,7 @@ from contextlib import asynccontextmanager
 
 import httpx
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import StreamingResponse, HTMLResponse, JSONResponse
+from fastapi.responses import StreamingResponse, HTMLResponse, JSONResponse, PlainTextResponse
 
 import config
 import stats
@@ -17,11 +17,13 @@ from onyx import stream_chat, full_chat
 from auth_manager import auth_manager
 
 logging.basicConfig(
-    level=config.LOG_LEVEL,
+    level=getattr(logging, config.LOG_LEVEL),
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 logger = logging.getLogger(__name__)
 
+
+# ── Lifespan ─────────────────────────────────────────────────────
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -37,17 +39,15 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Onyx Proxy", lifespan=lifespan)
 
 
-# ============================================================
-# 鉴权
-# ============================================================
+# ── 鉴权 ─────────────────────────────────────────────────────────
 
 def _check_api_key(request: Request):
     if not config.API_KEY:
         return
     auth = request.headers.get("authorization", "")
-    token = auth.replace("Bearer ", "") if auth.startswith("Bearer ") else auth
+    token = auth.replace("Bearer ", "") if auth.startswith("Bearer ") else ""
     if token != config.API_KEY:
-        raise HTTPException(status_code=401, detail="Invalid API key")
+        raise HTTPException(401, "Invalid API key")
 
 
 def _check_dashboard_key(request: Request):
@@ -55,17 +55,14 @@ def _check_dashboard_key(request: Request):
         return
     key = request.headers.get("x-auth-key") or request.query_params.get("key")
     if key != config.API_KEY:
-        raise HTTPException(status_code=401, detail="Invalid API key")
+        raise HTTPException(401, "Invalid dashboard key")
 
 
-# ============================================================
-# Dashboard
-# ============================================================
+# ── Dashboard ────────────────────────────────────────────────────
 
 @app.get("/", response_class=HTMLResponse)
 async def dashboard():
-    html_path = Path(__file__).parent / "templates" / "dashboard.html"
-    html = html_path.read_text(encoding="utf-8")
+    html = Path("templates/dashboard.html").read_text(encoding="utf-8")
     html = html.replace(
         "__MODELS_PLACEHOLDER__",
         json.dumps(config.MODEL_MAP, ensure_ascii=False),
@@ -73,14 +70,12 @@ async def dashboard():
     return HTMLResponse(html)
 
 
-# ============================================================
-# Auth 管理 API
-# ============================================================
+# ── Auth 管理 API ────────────────────────────────────────────────
 
 @app.get("/auth/status")
 async def auth_status(request: Request):
     _check_dashboard_key(request)
-    return JSONResponse(auth_manager.get_status())
+    return auth_manager.get_status()
 
 
 @app.post("/auth/check")
@@ -101,22 +96,24 @@ async def auth_refresh_single(request: Request):
     body = await request.json()
     email = body.get("email")
     if not email:
-        raise HTTPException(status_code=400, detail="Missing email")
+        raise HTTPException(400, "Missing email")
     try:
         return await auth_manager.manual_refresh_single(email)
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+    except ValueError:
+        raise HTTPException(404, "Account not found")
 
 
-# 新增：切换账号禁用状态
 @app.post("/auth/toggle-disable")
 async def auth_toggle_disable(request: Request):
     _check_dashboard_key(request)
     body = await request.json()
     email = body.get("email")
     if not email:
-        raise HTTPException(status_code=400, detail="Missing email")
-    return await auth_manager.toggle_disable(email)
+        raise HTTPException(400, "Missing email")
+    try:
+        return await auth_manager.toggle_disable(email)
+    except ValueError:
+        raise HTTPException(404, "Account not found")
 
 
 @app.post("/auth/verify")
@@ -125,12 +122,60 @@ async def auth_verify(request: Request):
     key = body.get("key", "")
     if not config.API_KEY or key == config.API_KEY:
         return {"ok": True}
-    raise HTTPException(status_code=401, detail="Invalid key")
+    raise HTTPException(401, "Invalid key")
 
 
-# ============================================================
-# SSE 日志
-# ============================================================
+# ── 新增：批量添加账号 ───────────────────────────────────────────
+
+@app.post("/auth/add-accounts")
+async def auth_add_accounts(request: Request):
+    """
+    批量添加账号（逗号分隔），使用统一的 ONYX_PASSWORD 自动登录。
+    请求体: {"accounts": "email1,email2,email3"}
+    """
+    _check_dashboard_key(request)
+    body = await request.json()
+    raw = body.get("accounts", "")
+    if not raw or not raw.strip():
+        raise HTTPException(400, "Missing accounts")
+
+    emails = [a.strip() for a in raw.split(",") if a.strip()]
+    if not emails:
+        raise HTTPException(400, "No valid accounts provided")
+
+    if not config.ONYX_PASSWORD:
+        raise HTTPException(400, "ONYX_PASSWORD is not set. Cannot login new accounts.")
+
+    added, skipped = await auth_manager.add_accounts_and_login(emails)
+
+    return {
+        "ok": True,
+        "added": len(added),
+        "skipped": len(skipped),
+        "added_accounts": added,
+        "skipped_accounts": skipped,
+        "status": auth_manager.get_status(),
+    }
+
+
+# ── 新增：导出所有账号为 txt ──────────────────────────────────────
+
+@app.get("/auth/export-accounts")
+async def auth_export_accounts(request: Request):
+    """导出所有账号为 txt 文件下载"""
+    _check_dashboard_key(request)
+    emails = auth_manager.get_all_emails()
+    content = "\n".join(emails)
+    return PlainTextResponse(
+        content=content,
+        media_type="text/plain",
+        headers={
+            "Content-Disposition": "attachment; filename=onyx_accounts.txt"
+        },
+    )
+
+
+# ── SSE 日志 ─────────────────────────────────────────────────────
 
 @app.get("/auth/logs/stream")
 async def auth_logs_stream(request: Request):
@@ -159,9 +204,7 @@ async def auth_logs_stream(request: Request):
     )
 
 
-# ============================================================
-# OpenAI-compatible API
-# ============================================================
+# ── OpenAI 兼容 API ──────────────────────────────────────────────
 
 @app.get("/v1/models")
 async def list_models(request: Request):
@@ -180,23 +223,24 @@ async def chat_completions(request: Request):
     messages = body.get("messages", [])
     model = body.get("model", "claude-sonnet-4.5")
     stream = body.get("stream", False)
-
-    # 提取用户请求中的 temperature（不传则为 None，由 onyx.py 回退到默认值 0.5）
     temperature = body.get("temperature", None)
 
     if stream:
         return StreamingResponse(
-            _stream_response(messages, model, temperature=temperature),
+            _stream_response(messages, model, temperature),
             media_type="text/event-stream",
         )
-    return await _non_stream_response(messages, model, temperature=temperature)
+    else:
+        return await _non_stream_response(messages, model, temperature)
 
 
-async def _stream_response(messages: list, model: str, temperature: float = None):
+async def _stream_response(messages, model, temperature):
     try:
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(
+            timeout=httpx.Timeout(config.REQUEST_TIMEOUT, connect=15.0)
+        ) as client:
             async for item_type, content in stream_chat(
-                client, messages, model, temperature=temperature
+                client, messages, model, temperature
             ):
                 if item_type == "thinking":
                     chunk = {
@@ -204,11 +248,9 @@ async def _stream_response(messages: list, model: str, temperature: float = None
                         "object": "chat.completion.chunk",
                         "created": int(time.time()),
                         "model": model,
-                        "choices": [{
-                            "index": 0,
-                            "delta": {"reasoning_content": content},
-                            "finish_reason": None,
-                        }],
+                        "choices": [
+                            {"index": 0, "delta": {"reasoning_content": content}, "finish_reason": None}
+                        ],
                     }
                 else:
                     chunk = {
@@ -216,99 +258,79 @@ async def _stream_response(messages: list, model: str, temperature: float = None
                         "object": "chat.completion.chunk",
                         "created": int(time.time()),
                         "model": model,
-                        "choices": [{
-                            "index": 0,
-                            "delta": {"content": content},
-                            "finish_reason": None,
-                        }],
+                        "choices": [
+                            {"index": 0, "delta": {"content": content}, "finish_reason": None}
+                        ],
                     }
                 yield f"data: {json.dumps(chunk, ensure_ascii=False)}\n\n"
 
-        # 流正常结束
+        # finish
         finish_chunk = {
             "id": "chatcmpl-onyx",
             "object": "chat.completion.chunk",
             "created": int(time.time()),
             "model": model,
-            "choices": [{
-                "index": 0,
-                "delta": {},
-                "finish_reason": "stop",
-            }],
+            "choices": [{"index": 0, "delta": {}, "finish_reason": "stop"}],
         }
         yield f"data: {json.dumps(finish_chunk, ensure_ascii=False)}\n\n"
         yield "data: [DONE]\n\n"
-
     except Exception as e:
-        logger.error("❌ Stream error: %s", e)
+        logger.error("Stream error: %s", e)
         err_chunk = {
             "id": "chatcmpl-onyx",
             "object": "chat.completion.chunk",
             "created": int(time.time()),
             "model": model,
-            "choices": [{
-                "index": 0,
-                "delta": {"content": f"\n\n[Error: {str(e)}]"},
-                "finish_reason": "stop",
-            }],
+            "choices": [
+                {"index": 0, "delta": {"content": f"\n\n[Error: {e}]"}, "finish_reason": "stop"}
+            ],
         }
         yield f"data: {json.dumps(err_chunk, ensure_ascii=False)}\n\n"
         yield "data: [DONE]\n\n"
 
 
-async def _non_stream_response(messages: list, model: str, temperature: float = None):
-    try:
-        async with httpx.AsyncClient() as client:
-            text, thinking = await full_chat(
-                client, messages, model, temperature=temperature
-            )
+async def _non_stream_response(messages, model, temperature):
+    async with httpx.AsyncClient(
+        timeout=httpx.Timeout(config.REQUEST_TIMEOUT, connect=15.0)
+    ) as client:
+        text, thinking = await full_chat(client, messages, model, temperature)
 
-        # 使用精确 token 统计计算 usage
-        prompt_text = "\n".join(
-            _safe_content_to_text(m.get("content", "")) for m in messages
-        )
-        prompt_tokens = stats.count_tokens(prompt_text)
-        completion_tokens = stats.count_tokens(text)
+    prompt_text = " ".join(_safe_content_to_text(m.get("content", "")) for m in messages)
+    prompt_tokens = stats.count_tokens(prompt_text)
+    completion_tokens = stats.count_tokens(text)
 
-        result = {
-            "id": "chatcmpl-onyx",
-            "object": "chat.completion",
-            "created": int(time.time()),
-            "model": model,
-            "choices": [{
+    result = {
+        "id": "chatcmpl-onyx",
+        "object": "chat.completion",
+        "created": int(time.time()),
+        "model": model,
+        "choices": [
+            {
                 "index": 0,
                 "message": {"role": "assistant", "content": text},
                 "finish_reason": "stop",
-            }],
-            "usage": {
-                "prompt_tokens": prompt_tokens,
-                "completion_tokens": completion_tokens,
-                "total_tokens": prompt_tokens + completion_tokens,
-            },
-        }
-        if thinking:
-            result["choices"][0]["message"]["reasoning_content"] = thinking
-        return JSONResponse(result)
-
-    except Exception as e:
-        logger.error("❌ Chat error: %s", e)
-        raise HTTPException(status_code=500, detail=str(e))
+            }
+        ],
+        "usage": {
+            "prompt_tokens": prompt_tokens,
+            "completion_tokens": completion_tokens,
+            "total_tokens": prompt_tokens + completion_tokens,
+        },
+    }
+    if thinking:
+        result["choices"][0]["message"]["reasoning_content"] = thinking
+    return result
 
 
-def _safe_content_to_text(content) -> str:
-    """从 OpenAI 消息 content 字段中提取纯文本（供 token 统计使用）"""
+def _safe_content_to_text(content):
     if isinstance(content, list):
         return " ".join(
-            part.get("text", "")
-            for part in content
-            if isinstance(part, dict) and part.get("type") == "text"
+            p.get("text", "") for p in content if isinstance(p, dict) and p.get("type") == "text"
         )
-    return str(content or "")
+    return str(content) if content else ""
 
 
-# ============================================================
-# Health
-# ============================================================
+# ── Health ───────────────────────────────────────────────────────
 
 @app.get("/health")
 async def health():
@@ -318,6 +340,8 @@ async def health():
         "total_accounts": len(config.ONYX_ACCOUNT_LIST),
     }
 
+
+# ── Entry ────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     import uvicorn
