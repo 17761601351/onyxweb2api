@@ -6,11 +6,10 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
-
-# 确保 templates 目录存在
 RUN mkdir -p /app/templates
 
+# 使用 Zeabur 注入的 PORT 环境变量，默认 8080
+ENV PORT=8080
 EXPOSE 8080
-
 
 CMD ["python", "main.py"]
