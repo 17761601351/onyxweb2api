@@ -6,72 +6,39 @@
     <title>Onyx Proxy Dashboard</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: #0f172a;
-            color: #e2e8f0;
-            min-height: 100vh;
-            padding: 20px;
+            background: #0f172a; color: #e2e8f0; min-height: 100vh; padding: 20px;
         }
-
-        /* ===== Lock Screen ===== */
-        .lock-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.97);
-            display: flex; align-items: center; justify-content: center;
-            z-index: 9999;
-        }
+        /* Lock Screen */
+        .lock-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.97); display: flex; align-items: center; justify-content: center; z-index: 9999; }
         .lock-overlay.hidden { display: none; }
-        .lock-box {
-            background: #1e293b; border: 1px solid #334155; border-radius: 16px;
-            padding: 40px; text-align: center; max-width: 400px; width: 90%;
-        }
+        .lock-box { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 40px; text-align: center; max-width: 400px; width: 90%; }
         .lock-box h2 { margin-bottom: 8px; font-size: 1.4em; }
         .lock-box p { color: #94a3b8; margin-bottom: 20px; font-size: 0.9em; }
-        .lock-box input {
-            width: 100%; padding: 12px 16px; border-radius: 8px; border: 1px solid #334155;
-            background: #0f172a; color: #e2e8f0; font-size: 1em; margin-bottom: 12px;
-            outline: none; transition: border-color 0.2s;
-        }
+        .lock-box input { width: 100%; padding: 12px 16px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #e2e8f0; font-size: 1em; margin-bottom: 12px; outline: none; transition: border-color 0.2s; }
         .lock-box input:focus { border-color: #3b82f6; }
-        .lock-box .lock-btn {
-            width: 100%; padding: 12px; border-radius: 8px; border: none;
-            background: #3b82f6; color: #fff; font-size: 1em; cursor: pointer;
-            transition: background 0.2s;
-        }
+        .lock-box .lock-btn { width: 100%; padding: 12px; border-radius: 8px; border: none; background: #3b82f6; color: #fff; font-size: 1em; cursor: pointer; transition: background 0.2s; }
         .lock-box .lock-btn:hover { background: #2563eb; }
         .lock-box .lock-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .lock-error { color: #f87171; font-size: 0.85em; margin-top: 8px; min-height: 20px; }
-
-        /* ===== Main Content ===== */
+        /* Main */
         .container { max-width: 1200px; margin: 0 auto; }
         .header { text-align: center; margin-bottom: 30px; }
         .header h1 { font-size: 1.8em; margin-bottom: 6px; }
         .header p { color: #94a3b8; font-size: 0.9em; }
-
-        /* ===== Stats Grid ===== */
-        .stats-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 16px; margin-bottom: 24px;
-        }
-        .stat-card {
-            background: #1e293b; border: 1px solid #334155; border-radius: 12px;
-            padding: 20px; text-align: center; transition: transform 0.2s;
-        }
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; text-align: center; transition: transform 0.2s; }
         .stat-card:hover { transform: translateY(-2px); }
         .stat-card .label { color: #94a3b8; font-size: 0.8em; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
         .stat-card .value { font-size: 1.8em; font-weight: 700; }
         .stat-card .value.green { color: #34d399; }
         .stat-card .value.yellow { color: #fbbf24; }
         .stat-card .value.red { color: #f87171; }
-
-        /* ===== Actions ===== */
+        /* Actions */
         .actions { display: flex; gap: 12px; margin-bottom: 24px; justify-content: center; flex-wrap: wrap; }
-        .btn {
-            padding: 10px 20px; border-radius: 8px; border: none; color: #fff;
-            font-size: 0.9em; cursor: pointer; transition: opacity 0.2s; display: inline-flex; align-items: center; gap: 6px;
-        }
+        .btn { padding: 10px 20px; border-radius: 8px; border: none; color: #fff; font-size: 0.9em; cursor: pointer; transition: opacity 0.2s; display: inline-flex; align-items: center; gap: 6px; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-check { background: #3b82f6; }
         .btn-check:hover:not(:disabled) { background: #2563eb; }
@@ -81,46 +48,43 @@
         .btn-reload:hover:not(:disabled) { background: #4f46e5; }
         .btn-logout-dash { background: #ef4444; }
         .btn-logout-dash:hover:not(:disabled) { background: #dc2626; }
-
         .btn .spinner { display: none; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; }
         .btn.loading .spinner { display: inline-block; }
         .btn.loading .btn-icon { display: none; }
         @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* ===== Table ===== */
+        /* Add Account Section */
+        .add-account-section { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; margin-bottom: 24px; }
+        .add-account-section .section-label { font-size: 1.1em; font-weight: 600; margin-bottom: 12px; }
+        .add-account-section .desc { color: #94a3b8; font-size: 0.85em; margin-bottom: 12px; }
+        .add-account-row { display: flex; gap: 12px; align-items: flex-start; }
+        .add-account-row textarea { flex: 1; padding: 10px 14px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #e2e8f0; font-size: 0.9em; font-family: inherit; resize: vertical; min-height: 44px; max-height: 160px; outline: none; transition: border-color 0.2s; }
+        .add-account-row textarea:focus { border-color: #3b82f6; }
+        .add-account-row textarea::placeholder { color: #64748b; }
+        .btn-add { background: #10b981; }
+        .btn-add:hover:not(:disabled) { background: #059669; }
+        .btn-export { background: #8b5cf6; }
+        .btn-export:hover:not(:disabled) { background: #7c3aed; }
+        .add-account-result { margin-top: 10px; font-size: 0.85em; color: #94a3b8; min-height: 20px; }
+        .add-account-result.success { color: #34d399; }
+        .add-account-result.error { color: #f87171; }
+        /* Table */
         .section-title { font-size: 1.1em; font-weight: 600; margin-bottom: 12px; }
-        .table-wrapper {
-            background: #1e293b; border: 1px solid #334155; border-radius: 12px;
-            overflow-x: auto; margin-bottom: 24px;
-        }
+        .table-wrapper { background: #1e293b; border: 1px solid #334155; border-radius: 12px; overflow-x: auto; margin-bottom: 24px; }
         table { width: 100%; border-collapse: collapse; }
-        thead th {
-            background: #0f172a; padding: 12px 14px; text-align: left;
-            font-size: 0.75em; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8;
-            border-bottom: 1px solid #334155;
-        }
+        thead th { background: #0f172a; padding: 12px 14px; text-align: left; font-size: 0.75em; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; border-bottom: 1px solid #334155; }
         tbody td { padding: 12px 14px; border-bottom: 1px solid #1e293b; vertical-align: middle; }
         tbody tr:hover { background: rgba(59, 130, 246, 0.05); }
         tbody tr.row-disabled { opacity: 0.5; }
-
-        .badge {
-            display: inline-block; padding: 3px 10px; border-radius: 20px;
-            font-size: 0.78em; font-weight: 600;
-        }
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.78em; font-weight: 600; }
         .badge-active { background: rgba(52, 211, 153, 0.15); color: #34d399; }
         .badge-expired { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
         .badge-error { background: rgba(248, 113, 113, 0.15); color: #f87171; }
         .badge-pending { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
         .badge-disabled { background: rgba(148, 163, 184, 0.15); color: #94a3b8; margin-left: 4px; }
-
         .error-msg { color: #f87171; font-size: 0.8em; max-width: 220px; word-break: break-all; }
         .time-text { color: #94a3b8; font-size: 0.85em; white-space: nowrap; }
         .num-text { color: #e2e8f0; font-weight: 600; font-variant-numeric: tabular-nums; }
-
-        .btn-sm {
-            padding: 4px 12px; font-size: 0.8em; border-radius: 6px; border: none;
-            color: #fff; cursor: pointer; transition: opacity 0.2s;
-        }
+        .btn-sm { padding: 4px 12px; font-size: 0.8em; border-radius: 6px; border: none; color: #fff; cursor: pointer; transition: opacity 0.2s; }
         .btn-sm:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-sm-refresh { background: #6366f1; margin-right: 4px; }
         .btn-sm-refresh:hover:not(:disabled) { background: #4f46e5; }
@@ -128,33 +92,20 @@
         .btn-sm-disable:hover:not(:disabled) { background: #dc2626; }
         .btn-sm-enable { background: #34d399; }
         .btn-sm-enable:hover:not(:disabled) { background: #059669; }
-
-        /* ===== Model Grid ===== */
-        .model-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 12px; margin-bottom: 24px;
-        }
-        .model-item {
-            background: #1e293b; border: 1px solid #334155; border-radius: 10px;
-            padding: 14px 18px; transition: transform 0.2s;
-        }
+        /* Model Grid */
+        .model-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-bottom: 24px; }
+        .model-item { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 14px 18px; transition: transform 0.2s; }
         .model-item:hover { transform: translateY(-1px); }
         .model-name { font-weight: 600; margin-bottom: 4px; }
         .model-provider { color: #94a3b8; font-size: 0.85em; }
-
-        /* ===== Logs ===== */
+        /* Logs */
         .log-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
         .log-dot { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; display: inline-block; }
         .log-dot.connected { background: #34d399; animation: pulse 2s infinite; }
         .log-dot.disconnected { background: #ef4444; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         .log-status-text { font-size: 0.8em; color: #94a3b8; }
-
-        .log-area {
-            background: #0f172a; border: 1px solid #334155; border-radius: 10px;
-            padding: 14px; height: 260px; overflow-y: auto; font-family: 'Courier New', Consolas, monospace;
-            font-size: 0.82em; line-height: 1.6;
-        }
+        .log-area { background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 14px; height: 260px; overflow-y: auto; font-family: 'Courier New', Consolas, monospace; font-size: 0.82em; line-height: 1.6; }
         .log-entry { margin-bottom: 2px; }
         .log-time { color: #64748b; margin-right: 6px; }
         .log-tag { padding: 1px 6px; border-radius: 4px; font-size: 0.85em; font-weight: 600; margin-right: 6px; }
@@ -162,467 +113,441 @@
         .log-tag-ERROR { background: rgba(248, 113, 113, 0.15); color: #f87171; }
         .log-tag-INFO { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
         .log-tag-SYSTEM { background: rgba(148, 163, 184, 0.1); color: #94a3b8; }
-
-        /* ===== Toast ===== */
+        /* Toast */
         .toast-container { position: fixed; top: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 8px; }
-        .toast {
-            padding: 12px 20px; border-radius: 8px; color: #fff; font-size: 0.9em;
-            animation: slideIn 0.3s ease; min-width: 240px;
-        }
+        .toast { padding: 12px 20px; border-radius: 8px; color: #fff; font-size: 0.9em; animation: slideIn 0.3s ease; min-width: 240px; }
         .toast-success { background: #065f46; border: 1px solid #34d399; }
         .toast-error { background: #7f1d1d; border: 1px solid #f87171; }
         .toast-info { background: #1e3a5f; border: 1px solid #60a5fa; }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-
-        /* ===== Responsive ===== */
+        /* Responsive */
         @media (max-width: 768px) {
             body { padding: 12px; }
             .header h1 { font-size: 1.3em; }
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
             .table-wrapper { overflow-x: auto; }
+            .add-account-row { flex-direction: column; }
+            .add-account-row textarea { min-height: 60px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Lock Screen -->
-    <div class="lock-overlay" id="lockOverlay">
-        <div class="lock-box">
-            <h2>🔐 Dashboard 验证</h2>
-            <p>请输入 API Key 以访问管理面板</p>
-            <input type="password" id="lockKeyInput" placeholder="输入 API Key...">
-            <button class="lock-btn" id="lockBtn" onclick="doVerify()">验证并进入</button>
-            <div class="lock-error" id="lockError"></div>
-        </div>
+<!-- Lock Screen -->
+<div class="lock-overlay" id="lockOverlay">
+    <div class="lock-box">
+        <h2>🔐 Dashboard 验证</h2>
+        <p>请输入 API Key 以访问管理面板</p>
+        <input type="password" id="lockKeyInput" placeholder="输入 API Key..." onkeydown="if(event.key==='Enter')doVerify()">
+        <button class="lock-btn" id="lockBtn" onclick="doVerify()">验证并进入</button>
+        <div class="lock-error" id="lockError"></div>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="container" id="mainContent" style="display:none;">
+    <div class="header">
+        <h1>🚀 Onyx API Proxy Dashboard</h1>
+        <p>账号认证管理 · 自动 Token 刷新 · 每 2 小时检测</p>
     </div>
 
-    <!-- Main Content -->
-    <div class="container" id="mainContent" style="display:none;">
-        <div class="header">
-            <h1>🚀 Onyx API Proxy Dashboard</h1>
-            <p>账号认证管理 · 自动 Token 刷新 · 每 2 小时检测</p>
-        </div>
-
-        <!-- Stats -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="label">总账号数</div>
-                <div class="value" id="totalAccounts">-</div>
-            </div>
-            <div class="stat-card">
-                <div class="label">活跃 Token</div>
-                <div class="value green" id="activeAccounts">-</div>
-            </div>
-            <div class="stat-card">
-                <div class="label">失效 / 错误</div>
-                <div class="value red" id="failedAccounts">-</div>
-            </div>
-            <div class="stat-card">
-                <div class="label">检测间隔</div>
-                <div class="value yellow" id="checkInterval">-</div>
-            </div>
-            <div class="stat-card">
-                <div class="label">总输出 Tokens</div>
-                <div class="value" id="totalOutputTokens">-</div>
-            </div>
-        </div>
-
-        <!-- Actions -->
-        <div class="actions">
-            <button class="btn btn-check" id="btnCheck" onclick="doCheck()">
-                <span class="btn-icon">🔍</span><span class="spinner"></span> 检测所有 Token
-            </button>
-            <button class="btn btn-refresh" id="btnRefresh" onclick="doRefresh()">
-                <span class="btn-icon">🔄</span><span class="spinner"></span> 重新登录全部账号
-            </button>
-            <button class="btn btn-reload" id="btnReload" onclick="loadStatus()">
-                <span class="btn-icon">📊</span><span class="spinner"></span> 刷新状态
-            </button>
-            <button class="btn btn-logout-dash" onclick="doLogout()">
-                <span class="btn-icon">🚪</span> 退出验证
-            </button>
-        </div>
-
-        <!-- Accounts Table -->
-        <div class="section-title">📋 账号状态</div>
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>账号</th>
-                        <th>状态</th>
-                        <th>调用次数</th>
-                        <th>成功 / 失败</th>
-                        <th>输出 Tokens</th>
-                        <th>上次调用</th>
-                        <th>上次登录</th>
-                        <th>错误信息</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody id="accountsBody">
-                    <tr><td colspan="10" style="text-align:center;color:#64748b;padding:30px;">加载中...</td></tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Models -->
-        <div class="section-title">🤖 可用模型</div>
-        <div class="model-grid" id="modelGrid"></div>
-
-        <!-- Logs -->
-        <div class="section-title">
-            <div class="log-header">
-                📝 实时日志
-                <span class="log-dot disconnected" id="logDot"></span>
-                <span class="log-status-text" id="logStatusText">未连接</span>
-            </div>
-        </div>
-        <div class="log-area" id="logArea"></div>
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-card"><div class="label">总账号数</div><div class="value" id="totalAccounts">-</div></div>
+        <div class="stat-card"><div class="label">活跃 Token</div><div class="value green" id="activeTokens">-</div></div>
+        <div class="stat-card"><div class="label">失效 / 错误</div><div class="value red" id="errorCount">-</div></div>
+        <div class="stat-card"><div class="label">检测间隔</div><div class="value yellow" id="checkInterval">-</div></div>
+        <div class="stat-card"><div class="label">总输出 Tokens</div><div class="value" id="totalOutputTokens">-</div></div>
     </div>
 
-    <!-- Toast Container -->
-    <div class="toast-container" id="toastContainer"></div>
+    <!-- Actions -->
+    <div class="actions">
+        <button class="btn btn-check" id="btnCheck" onclick="doCheckAll()"><span class="btn-icon">🔍</span><span class="spinner"></span> 检测所有 Token</button>
+        <button class="btn btn-refresh" id="btnRefresh" onclick="doRefreshAll()"><span class="btn-icon">🔄</span><span class="spinner"></span> 重新登录全部账号</button>
+        <button class="btn btn-reload" id="btnReload" onclick="loadStatus()"><span class="btn-icon">📊</span><span class="spinner"></span> 刷新状态</button>
+        <button class="btn btn-logout-dash" onclick="doLogout()"><span class="btn-icon">🚪</span> 退出验证</button>
+    </div>
 
-    <script>
-        const API_BASE = window.location.origin;
-        const MODELS = __MODELS_PLACEHOLDER__;
+    <!-- ★ 新增：添加账号区域 -->
+    <div class="add-account-section">
+        <div class="section-label">➕ 添加账号</div>
+        <div class="desc">输入账号邮箱（多个账号用英文逗号 <b>,</b> 隔开），密码统一使用环境变量 ONYX_PASSWORD，添加后自动登录并获取 Token 参与轮询。</div>
+        <div class="add-account-row">
+            <textarea id="addAccountInput" placeholder="例如: user1@example.com, user2@example.com, user3@example.com" rows="2"></textarea>
+            <button class="btn btn-add" id="btnAddAccount" onclick="doAddAccounts()"><span class="btn-icon">➕</span><span class="spinner"></span> 添加并登录</button>
+            <button class="btn btn-export" id="btnExport" onclick="doExportAccounts()"><span class="btn-icon">📥</span> 导出全部账号</button>
+        </div>
+        <div class="add-account-result" id="addAccountResult"></div>
+    </div>
 
-        let authKey = '';
-        let sseSource = null;
+    <!-- Account Table -->
+    <div class="section-title">📋 账号状态</div>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th><th>账号</th><th>状态</th><th>调用次数</th><th>成功 / 失败</th>
+                    <th>输出 Tokens</th><th>上次调用</th><th>上次登录</th><th>错误信息</th><th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="accountsBody">
+                <tr><td colspan="10" style="text-align:center;color:#94a3b8;">加载中...</td></tr>
+            </tbody>
+        </table>
+    </div>
 
-        // ===== Utilities =====
-        function showToast(msg, type = 'info') {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = `toast toast-${type}`;
-            toast.textContent = msg;
-            container.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
+    <!-- Models -->
+    <div class="section-title">🤖 可用模型</div>
+    <div class="model-grid" id="modelGrid"></div>
+
+    <!-- Logs -->
+    <div class="section-title">📝 实时日志</div>
+    <div class="log-header">
+        <span class="log-dot disconnected" id="logDot"></span>
+        <span class="log-status-text" id="logStatusText">未连接</span>
+    </div>
+    <div class="log-area" id="logArea"></div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+    // ── 全局变量 ──────────────────────────────────────────────────
+    let AUTH_KEY = '';
+    let sseSource = null;
+    const MODEL_MAP = __MODELS_PLACEHOLDER__;
+
+    // ── Toast 通知 ────────────────────────────────────────────────
+    function showToast(msg, type) {
+        const c = document.getElementById('toastContainer');
+        const t = document.createElement('div');
+        t.className = 'toast toast-' + (type || 'info');
+        t.textContent = msg;
+        c.appendChild(t);
+        setTimeout(() => { t.remove(); }, 4000);
+    }
+
+    // ── 时间格式化 ────────────────────────────────────────────────
+    function fmtTime(ts) {
+        if (!ts) return '-';
+        const d = new Date(ts * 1000);
+        const pad = n => String(n).padStart(2, '0');
+        return pad(d.getMonth()+1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+    }
+
+    function fmtInterval(s) {
+        if (!s) return '-';
+        if (s >= 3600) return (s / 3600).toFixed(1) + ' 小时';
+        if (s >= 60) return (s / 60).toFixed(0) + ' 分钟';
+        return s + 's';
+    }
+
+    function fmtNumber(n) {
+        if (n === undefined || n === null) return '0';
+        if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+        if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+        return String(n);
+    }
+
+    // ── 按钮 loading 状态 ─────────────────────────────────────────
+    function setLoading(btn, loading) {
+        if (loading) { btn.classList.add('loading'); btn.disabled = true; }
+        else { btn.classList.remove('loading'); btn.disabled = false; }
+    }
+
+    // ── API 请求封装 ──────────────────────────────────────────────
+    async function apiFetch(url, options) {
+        const opts = options || {};
+        opts.headers = opts.headers || {};
+        if (AUTH_KEY) opts.headers['x-auth-key'] = AUTH_KEY;
+        const resp = await fetch(url, opts);
+        if (!resp.ok) {
+            const text = await resp.text();
+            throw new Error(text || ('HTTP ' + resp.status));
         }
+        return resp;
+    }
 
-        function formatTime(ts) {
-            if (!ts) return '-';
-            const d = new Date(ts * 1000);
-            return d.toLocaleString('zh-CN', { hour12: false });
+    async function apiJson(url, options) {
+        const resp = await apiFetch(url, options);
+        return resp.json();
+    }
+
+    // ── 验证登录 ──────────────────────────────────────────────────
+    async function doVerify() {
+        const input = document.getElementById('lockKeyInput');
+        const errDiv = document.getElementById('lockError');
+        const btn = document.getElementById('lockBtn');
+        const key = input.value.trim();
+        errDiv.textContent = '';
+        btn.disabled = true;
+        try {
+            const resp = await fetch('/auth/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key: key })
+            });
+            if (!resp.ok) throw new Error('验证失败');
+            const data = await resp.json();
+            if (data.ok) {
+                AUTH_KEY = key;
+                document.getElementById('lockOverlay').classList.add('hidden');
+                document.getElementById('mainContent').style.display = '';
+                loadStatus();
+                renderModels();
+                connectSSE();
+            }
+        } catch (e) {
+            errDiv.textContent = '❌ API Key 验证失败，请检查后重试';
         }
+        btn.disabled = false;
+    }
 
-        function formatNumber(n) {
-            if (n === undefined || n === null) return '0';
-            return n.toLocaleString();
+    // ── 退出 ──────────────────────────────────────────────────────
+    function doLogout() {
+        AUTH_KEY = '';
+        document.getElementById('mainContent').style.display = 'none';
+        document.getElementById('lockOverlay').classList.remove('hidden');
+        document.getElementById('lockKeyInput').value = '';
+        document.getElementById('lockError').textContent = '';
+        if (sseSource) { sseSource.close(); sseSource = null; }
+        document.getElementById('logDot').className = 'log-dot disconnected';
+        document.getElementById('logStatusText').textContent = '未连接';
+    }
+
+    // ── 加载状态 ──────────────────────────────────────────────────
+    async function loadStatus() {
+        const btn = document.getElementById('btnReload');
+        setLoading(btn, true);
+        try {
+            const data = await apiJson('/auth/status');
+            renderStats(data);
+            renderTable(data.accounts || []);
+        } catch (e) {
+            showToast('加载状态失败: ' + e.message, 'error');
         }
+        setLoading(btn, false);
+    }
 
-        // ===== Lock Screen =====
-        document.getElementById('lockKeyInput').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') doVerify();
+    function renderStats(data) {
+        document.getElementById('totalAccounts').textContent = data.total_accounts || 0;
+        document.getElementById('activeTokens').textContent = data.active_accounts || 0;
+        const errN = (data.total_accounts || 0) - (data.active_accounts || 0);
+        document.getElementById('errorCount').textContent = errN;
+        document.getElementById('checkInterval').textContent = fmtInterval(data.check_interval_seconds);
+        let totalOut = 0;
+        (data.accounts || []).forEach(a => { totalOut += (a.output_tokens || 0); });
+        document.getElementById('totalOutputTokens').textContent = fmtNumber(totalOut);
+    }
+
+    function renderTable(accounts) {
+        const tbody = document.getElementById('accountsBody');
+        if (!accounts.length) {
+            tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#94a3b8;">暂无账号</td></tr>';
+            return;
+        }
+        let html = '';
+        accounts.forEach((acc, i) => {
+            const rowClass = acc.disabled ? 'row-disabled' : '';
+            const statusBadge = acc.disabled
+                ? '<span class="badge badge-disabled">已禁用</span>'
+                : '<span class="badge badge-' + acc.status + '">' + acc.status + '</span>';
+            const disableBtn = acc.disabled
+                ? '<button class="btn-sm btn-sm-enable" onclick="doToggle(\'' + acc.email_full + '\')">启用</button>'
+                : '<button class="btn-sm btn-sm-disable" onclick="doToggle(\'' + acc.email_full + '\')">禁用</button>';
+            html += '<tr class="' + rowClass + '">' +
+                '<td>' + (i + 1) + '</td>' +
+                '<td>' + escapeHtml(acc.email) + '</td>' +
+                '<td>' + statusBadge + '</td>' +
+                '<td class="num-text">' + (acc.total_requests || 0) + '</td>' +
+                '<td class="num-text">' + (acc.success_count || 0) + ' / ' + (acc.error_count || 0) + '</td>' +
+                '<td class="num-text">' + fmtNumber(acc.output_tokens) + '</td>' +
+                '<td class="time-text">' + fmtTime(acc.last_used) + '</td>' +
+                '<td class="time-text">' + fmtTime(acc.last_login) + '</td>' +
+                '<td class="error-msg">' + (acc.error ? escapeHtml(acc.error) : '-') + '</td>' +
+                '<td>' +
+                    '<button class="btn-sm btn-sm-refresh" onclick="doRefreshSingle(\'' + acc.email_full + '\')">刷新</button>' +
+                    disableBtn +
+                '</td></tr>';
         });
+        tbody.innerHTML = html;
+    }
 
-        async function doVerify() {
-            const input = document.getElementById('lockKeyInput');
-            const errEl = document.getElementById('lockError');
-            const btn = document.getElementById('lockBtn');
-            const key = input.value.trim();
+    function escapeHtml(s) {
+        if (!s) return '';
+        const div = document.createElement('div');
+        div.textContent = s;
+        return div.innerHTML;
+    }
 
-            if (!key) {
-                errEl.textContent = '请输入 API Key';
-                return;
+    // ── 检测所有 Token ────────────────────────────────────────────
+    async function doCheckAll() {
+        const btn = document.getElementById('btnCheck');
+        setLoading(btn, true);
+        try {
+            const data = await apiJson('/auth/check', { method: 'POST' });
+            renderStats(data);
+            renderTable(data.accounts || []);
+            showToast('检测完成', 'success');
+        } catch (e) {
+            showToast('检测失败: ' + e.message, 'error');
+        }
+        setLoading(btn, false);
+    }
+
+    // ── 重新登录全部 ──────────────────────────────────────────────
+    async function doRefreshAll() {
+        const btn = document.getElementById('btnRefresh');
+        setLoading(btn, true);
+        try {
+            const data = await apiJson('/auth/refresh', { method: 'POST' });
+            renderStats(data);
+            renderTable(data.accounts || []);
+            showToast('全部重新登录完成', 'success');
+        } catch (e) {
+            showToast('刷新失败: ' + e.message, 'error');
+        }
+        setLoading(btn, false);
+    }
+
+    // ── 刷新单个账号 ──────────────────────────────────────────────
+    async function doRefreshSingle(email) {
+        try {
+            const data = await apiJson('/auth/refresh-single', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email })
+            });
+            renderStats(data);
+            renderTable(data.accounts || []);
+            showToast('刷新完成', 'success');
+        } catch (e) {
+            showToast('刷新失败: ' + e.message, 'error');
+        }
+    }
+
+    // ── 切换禁用 ──────────────────────────────────────────────────
+    async function doToggle(email) {
+        try {
+            const data = await apiJson('/auth/toggle-disable', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email })
+            });
+            renderStats(data);
+            renderTable(data.accounts || []);
+            showToast('状态已切换', 'success');
+        } catch (e) {
+            showToast('操作失败: ' + e.message, 'error');
+        }
+    }
+
+    // ── ★ 新增：添加账号 ─────────────────────────────────────────
+    async function doAddAccounts() {
+        const btn = document.getElementById('btnAddAccount');
+        const input = document.getElementById('addAccountInput');
+        const result = document.getElementById('addAccountResult');
+        const raw = input.value.trim();
+        if (!raw) {
+            result.className = 'add-account-result error';
+            result.textContent = '❌ 请输入至少一个账号邮箱';
+            return;
+        }
+        setLoading(btn, true);
+        result.className = 'add-account-result';
+        result.textContent = '正在添加并登录...';
+        try {
+            const data = await apiJson('/auth/add-accounts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ accounts: raw })
+            });
+            const msgs = [];
+            if (data.added > 0) msgs.push('✅ 成功添加 ' + data.added + ' 个账号');
+            if (data.skipped > 0) msgs.push('⚠️ 跳过 ' + data.skipped + ' 个已存在账号');
+            if (data.added === 0 && data.skipped === 0) msgs.push('没有新账号被添加');
+            result.className = 'add-account-result ' + (data.added > 0 ? 'success' : '');
+            result.textContent = msgs.join('，');
+            if (data.status) {
+                renderStats(data.status);
+                renderTable(data.status.accounts || []);
             }
+            if (data.added > 0) {
+                input.value = '';
+                showToast('成功添加 ' + data.added + ' 个账号', 'success');
+            }
+        } catch (e) {
+            result.className = 'add-account-result error';
+            result.textContent = '❌ 添加失败: ' + e.message;
+            showToast('添加失败: ' + e.message, 'error');
+        }
+        setLoading(btn, false);
+    }
 
-            btn.disabled = true;
-            btn.textContent = '验证中...';
-            errEl.textContent = '';
+    // ── ★ 新增：导出所有账号为 txt ───────────────────────────────
+    function doExportAccounts() {
+        const keyParam = AUTH_KEY ? ('?key=' + encodeURIComponent(AUTH_KEY)) : '';
+        const url = '/auth/export-accounts' + keyParam;
+        // 使用隐藏 a 标签触发下载
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'onyx_accounts.txt';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        showToast('正在导出账号...', 'info');
+    }
 
+    // ── 模型渲染 ──────────────────────────────────────────────────
+    function renderModels() {
+        const grid = document.getElementById('modelGrid');
+        let html = '';
+        for (const [name, info] of Object.entries(MODEL_MAP)) {
+            const provider = Array.isArray(info) ? info[0] : info;
+            html += '<div class="model-item">' +
+                '<div class="model-name">' + escapeHtml(name) + '</div>' +
+                '<div class="model-provider">' + escapeHtml(String(provider)) + '</div>' +
+                '</div>';
+        }
+        grid.innerHTML = html;
+    }
+
+    // ── SSE 实时日志 ──────────────────────────────────────────────
+    function connectSSE() {
+        if (sseSource) sseSource.close();
+        const keyParam = AUTH_KEY ? ('?key=' + encodeURIComponent(AUTH_KEY)) : '';
+        sseSource = new EventSource('/auth/logs/stream' + keyParam);
+        sseSource.onopen = function () {
+            document.getElementById('logDot').className = 'log-dot connected';
+            document.getElementById('logStatusText').textContent = '已连接';
+        };
+        sseSource.onmessage = function (e) {
             try {
-                const res = await fetch(`${API_BASE}/auth/verify`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ key: key }),
-                });
+                const log = JSON.parse(e.data);
+                appendLog(log);
+            } catch (err) { }
+        };
+        sseSource.onerror = function () {
+            document.getElementById('logDot').className = 'log-dot disconnected';
+            document.getElementById('logStatusText').textContent = '连接断开，重连中...';
+        };
+    }
 
-                if (res.ok) {
-                    authKey = key;
-                    sessionStorage.setItem('dashboard_key', key);
-                    document.getElementById('lockOverlay').classList.add('hidden');
-                    document.getElementById('mainContent').style.display = 'block';
-                    showToast('验证成功，欢迎进入管理面板', 'success');
-                    initDashboard();
-                } else {
-                    errEl.textContent = '❌ API Key 不正确，请重试';
-                    input.value = '';
-                    input.focus();
-                }
-            } catch (e) {
-                errEl.textContent = '网络错误: ' + e.message;
-            } finally {
-                btn.disabled = false;
-                btn.textContent = '验证并进入';
-            }
-        }
-
-        function doLogout() {
-            authKey = '';
-            sessionStorage.removeItem('dashboard_key');
-            if (sseSource) { sseSource.close(); sseSource = null; }
-            document.getElementById('mainContent').style.display = 'none';
-            document.getElementById('lockOverlay').classList.remove('hidden');
-            document.getElementById('lockKeyInput').value = '';
-            showToast('已退出', 'info');
-        }
-
-        // ===== Dashboard Init =====
-        function initDashboard() {
-            loadStatus();
-            renderModels();
-            connectSSE();
-        }
-
-        // ===== Load Status =====
-        async function loadStatus() {
-            const btn = document.getElementById('btnReload');
-            btn.classList.add('loading');
-            btn.disabled = true;
-
-            try {
-                const res = await fetch(`${API_BASE}/auth/status`, {
-                    headers: { 'x-auth-key': authKey },
-                });
-                if (!res.ok) throw new Error('HTTP ' + res.status);
-                const data = await res.json();
-
-                // Update stats cards
-                document.getElementById('totalAccounts').textContent = data.total_accounts || 0;
-                document.getElementById('activeAccounts').textContent = data.active_accounts || 0;
-
-                const failed = (data.total_accounts || 0) - (data.active_accounts || 0);
-                document.getElementById('failedAccounts').textContent = failed;
-
-                const interval = data.check_interval_seconds || 7200;
-                document.getElementById('checkInterval').textContent = (interval / 3600).toFixed(1) + 'h';
-
-                let totalOutput = 0;
-                if (data.accounts) {
-                    data.accounts.forEach(a => { totalOutput += (a.output_tokens || 0); });
-                }
-                document.getElementById('totalOutputTokens').textContent = formatNumber(totalOutput);
-
-                // Render accounts table
-                const tbody = document.getElementById('accountsBody');
-                if (!data.accounts || data.accounts.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#64748b;padding:30px;">暂无账号</td></tr>';
-                    return;
-                }
-
-                let html = '';
-                data.accounts.forEach((acc, idx) => {
-                    const badgeClass = acc.disabled ? 'badge-disabled' :
-                        acc.status === 'active' ? 'badge-active' :
-                        acc.status === 'expired' ? 'badge-expired' :
-                        acc.status === 'error' ? 'badge-error' : 'badge-pending';
-                    const badgeText = acc.disabled ? '已禁用' :
-                        acc.status === 'active' ? '活跃' :
-                        acc.status === 'expired' ? '过期' :
-                        acc.status === 'error' ? '错误' : '等待中';
-
-                    const disabledTag = acc.disabled && acc.status !== 'pending' ?
-                        ` <span class="badge badge-disabled">已禁用</span>` : '';
-
-                    const rowClass = acc.disabled ? 'row-disabled' : '';
-
-                    const toggleBtnClass = acc.disabled ? 'btn-sm btn-sm-enable' : 'btn-sm btn-sm-disable';
-                    const toggleBtnText = acc.disabled ? '启用' : '禁用';
-
-                    html += `<tr class="${rowClass}">
-                        <td class="num-text">${idx + 1}</td>
-                        <td>${acc.email}</td>
-                        <td><span class="badge ${badgeClass}">${badgeText}</span>${disabledTag}</td>
-                        <td class="num-text">${formatNumber(acc.total_requests)}</td>
-                        <td class="num-text">${formatNumber(acc.success_count)} / ${formatNumber(acc.error_count)}</td>
-                        <td class="num-text">${formatNumber(acc.output_tokens)}</td>
-                        <td class="time-text">${formatTime(acc.last_used)}</td>
-                        <td class="time-text">${formatTime(acc.last_login)}</td>
-                        <td><span class="error-msg">${acc.error || '-'}</span></td>
-                        <td>
-                            <button class="btn-sm btn-sm-refresh" onclick="doRefreshSingle('${acc.email_full}')">刷新</button>
-                            <button class="${toggleBtnClass}" onclick="doToggleDisable('${acc.email_full}')">${toggleBtnText}</button>
-                        </td>
-                    </tr>`;
-                });
-                tbody.innerHTML = html;
-
-            } catch (e) {
-                showToast('加载状态失败: ' + e.message, 'error');
-            } finally {
-                btn.classList.remove('loading');
-                btn.disabled = false;
-            }
-        }
-
-        // ===== Check All Tokens =====
-        async function doCheck() {
-            const btn = document.getElementById('btnCheck');
-            btn.classList.add('loading');
-            btn.disabled = true;
-
-            try {
-                const res = await fetch(`${API_BASE}/auth/check`, {
-                    method: 'POST',
-                    headers: { 'x-auth-key': authKey },
-                });
-                if (!res.ok) throw new Error('HTTP ' + res.status);
-                showToast('检测完成', 'success');
-                await loadStatus();
-            } catch (e) {
-                showToast('检测失败: ' + e.message, 'error');
-            } finally {
-                btn.classList.remove('loading');
-                btn.disabled = false;
-            }
-        }
-
-        // ===== Refresh All =====
-        async function doRefresh() {
-            const btn = document.getElementById('btnRefresh');
-            btn.classList.add('loading');
-            btn.disabled = true;
-
-            try {
-                const res = await fetch(`${API_BASE}/auth/refresh`, {
-                    method: 'POST',
-                    headers: { 'x-auth-key': authKey },
-                });
-                if (!res.ok) throw new Error('HTTP ' + res.status);
-                showToast('全部账号重新登录完成', 'success');
-                await loadStatus();
-            } catch (e) {
-                showToast('重新登录失败: ' + e.message, 'error');
-            } finally {
-                btn.classList.remove('loading');
-                btn.disabled = false;
-            }
-        }
-
-        // ===== Refresh Single Account =====
-        async function doRefreshSingle(email) {
-            try {
-                const res = await fetch(`${API_BASE}/auth/refresh-single`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'x-auth-key': authKey },
-                    body: JSON.stringify({ email: email }),
-                });
-                if (!res.ok) throw new Error('HTTP ' + res.status);
-                showToast('账号刷新成功', 'success');
-                await loadStatus();
-            } catch (e) {
-                showToast('刷新失败: ' + e.message, 'error');
-            }
-        }
-
-        // ===== 新增：切换账号禁用/启用状态 =====
-        async function doToggleDisable(email) {
-            try {
-                const res = await fetch(`${API_BASE}/auth/toggle-disable`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'x-auth-key': authKey },
-                    body: JSON.stringify({ email: email }),
-                });
-                if (!res.ok) throw new Error('HTTP ' + res.status);
-                const data = await res.json();
-                const acc = data.accounts && data.accounts.find(a => a.email_full === email);
-                if (acc && acc.disabled) {
-                    showToast('账号已禁用，不再参与轮询', 'info');
-                } else {
-                    showToast('账号已启用，恢复参与轮询', 'success');
-                }
-                await loadStatus();
-            } catch (e) {
-                showToast('操作失败: ' + e.message, 'error');
-            }
-        }
-
-        // ===== Render Models =====
-        function renderModels() {
-            const grid = document.getElementById('modelGrid');
-            let html = '';
-            for (const [name, info] of Object.entries(MODELS)) {
-                const provider = Array.isArray(info) ? info[0] : info;
-                html += `<div class="model-item">
-                    <div class="model-name">${name}</div>
-                    <div class="model-provider">${provider}</div>
-                </div>`;
-            }
-            grid.innerHTML = html;
-        }
-
-        // ===== SSE Logs =====
-        function connectSSE() {
-            if (sseSource) { sseSource.close(); }
-
-            const dot = document.getElementById('logDot');
-            const statusText = document.getElementById('logStatusText');
-            const logArea = document.getElementById('logArea');
-
-            const url = `${API_BASE}/auth/logs/stream?key=${encodeURIComponent(authKey)}`;
-            sseSource = new EventSource(url);
-
-            sseSource.onopen = function() {
-                dot.className = 'log-dot connected';
-                statusText.textContent = '已连接';
-            };
-
-            sseSource.onmessage = function(event) {
-                try {
-                    const log = JSON.parse(event.data);
-                    const entry = document.createElement('div');
-                    entry.className = 'log-entry';
-
-                    const timeStr = log.time || '';
-                    const level = log.level || 'INFO';
-                    const token = log.token || '';
-                    const message = log.message || '';
-
-                    entry.innerHTML = `<span class="log-time">${timeStr}</span><span class="log-tag log-tag-${level}">${level}</span><span class="log-token" style="color:#64748b;margin-right:6px;">${token}</span><span>${message}</span>`;
-                    logArea.appendChild(entry);
-
-                    // Auto scroll
-                    logArea.scrollTop = logArea.scrollHeight;
-
-                    // Limit entries
-                    while (logArea.children.length > 200) {
-                        logArea.removeChild(logArea.firstChild);
-                    }
-                } catch (e) {
-                    // ignore parse errors
-                }
-            };
-
-            sseSource.onerror = function() {
-                dot.className = 'log-dot disconnected';
-                statusText.textContent = '连接断开，重连中...';
-                sseSource.close();
-                sseSource = null;
-                setTimeout(connectSSE, 5000);
-            };
-        }
-
-        // ===== Auto-login on page load =====
-        (function() {
-            const savedKey = sessionStorage.getItem('dashboard_key');
-            if (savedKey) {
-                fetch(`${API_BASE}/auth/verify`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ key: savedKey }),
-                }).then(res => {
-                    if (res.ok) {
-                        authKey = savedKey;
-                        document.getElementById('lockOverlay').classList.add('hidden');
-                        document.getElementById('mainContent').style.display = 'block';
-                        initDashboard();
-                    }
-                }).catch(() => {});
-            }
-        })();
-    </script>
+    function appendLog(log) {
+        const area = document.getElementById('logArea');
+        const entry = document.createElement('div');
+        entry.className = 'log-entry';
+        const level = log.level || 'INFO';
+        const tagClass = 'log-tag log-tag-' + level;
+        entry.innerHTML = '<span class="log-time">' + escapeHtml(log.time || '') + '</span>' +
+            '<span class="' + tagClass + '">' + level + '</span>' +
+            '<span>' + escapeHtml(log.message || '') + '</span>';
+        area.appendChild(entry);
+        // 保持最近 300 条
+        while (area.children.length > 300) area.removeChild(area.firstChild);
+        area.scrollTop = area.scrollHeight;
+    }
+</script>
 </body>
 </html>
