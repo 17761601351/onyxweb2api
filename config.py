@@ -58,7 +58,7 @@ def get_all_tokens_from(start_token: str) -> list:
 
 # --- Server settings ---
 API_KEY = os.getenv("API_KEY", "")
-PORT = 7860
+PORT = 8080
 LOG_LEVEL = "INFO"
 REQUEST_TIMEOUT = 300
 
@@ -72,4 +72,5 @@ MODEL_MAP = {
     "gpt-4.1": ("OpenAI", "gpt-4.1"),
     "gpt-4o": ("OpenAI", "gpt-4o"),
     "o3": ("OpenAI", "o3"),
+
 }
